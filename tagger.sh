@@ -1,3 +1,5 @@
+#!/bin/bash
+
 taginstance () { # $1 node name, $2 node label, $3 node value
 cat > patch.json <<EOF
 [
