@@ -12,6 +12,8 @@ curl --request PATCH --data "$(cat patch.json)" -H "Content-Type:application/jso
 LOCAL_HOSTNAME=`curl -L http://169.254.169.254/latest/meta-data/local-hostname`
 
 if [[ `aws ec2 describe-instances --region eu-west-1 --instance-ids=$(curl -L http://169.254.169.254/latest/meta-data/instance-id) | jq '.Reservations[].Instances[].Tags[] | select ( .Key | contains("elastic-ip-id") )'` == *eipalloc* ]]; then
+  ELASTIC_IP_ID=`aws ec2 describe-instances --region eu-west-1 --instance-ids=$(curl -L http://169.254.169.254/latest/meta-data/instance-id) | jq '.Reservations[].Instances[].Tags[] | select ( .Key | contains("elastic-ip-id") ).Value' | sed 's/\"//g'`
+  aws ec2 associate-address --region eu-west-1 --allocation-id=$ELASTIC_IP_ID --instance-id=$(curl -L http://169.254.169.254/latest/meta-data/instance-id)
   taginstance $LOCAL_HOSTNAME elastic-ip-instance true
 else
   taginstance $LOCAL_HOSTNAME elastic-ip-instance false
