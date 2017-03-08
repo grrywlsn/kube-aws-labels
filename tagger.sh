@@ -15,8 +15,16 @@ LOCAL_HOSTNAME=`curl -L http://169.254.169.254/latest/meta-data/local-hostname`
 
 if [[ `aws ec2 describe-instances --region eu-west-1 --instance-ids=$(curl -L http://169.254.169.254/latest/meta-data/instance-id) | jq '.Reservations[].Instances[].Tags[] | select ( .Key | contains("elastic-ip-id") )'` == *eipalloc* ]]; then
   ELASTIC_IP_ID=`aws ec2 describe-instances --region eu-west-1 --instance-ids=$(curl -L http://169.254.169.254/latest/meta-data/instance-id) | jq '.Reservations[].Instances[].Tags[] | select ( .Key | contains("elastic-ip-id") ).Value' | sed 's/\"//g'`
-  #aws ec2 associate-address --region eu-west-1 --allocation-id=$ELASTIC_IP_ID --instance-id=$(curl -L http://169.254.169.254/latest/meta-data/instance-id)
-  taginstance $LOCAL_HOSTNAME elastic-ip-instance true
+
+  ELASTIC_IP=`aws ec2 describe-addresses --region eu-west-1 --allocation-ids eipalloc-eecdcf86 | jq '.Addresses[].PublicIp' | sed 's/\"//g'`
+  CURRENT_IP=`curl -L http://169.254.169.254/latest/meta-data/public-ipv4`
+
+  if [[ "$ELASTIC_IP" != "$CURRENT_IP" ]]; then
+    aws ec2 associate-address --region eu-west-1 --allocation-id=$ELASTIC_IP_ID --instance-id=$(curl -L http://169.254.169.254/latest/meta-data/instance-id)
+    taginstance $LOCAL_HOSTNAME elastic-ip-instance true
+  else
+    echo "Instance is already tagged" # this IF statement avoids a LOT of AWS eip remap costs
+  fi
 else
   taginstance $LOCAL_HOSTNAME elastic-ip-instance false
 fi
