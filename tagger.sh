@@ -21,7 +21,7 @@ if [[ `aws ec2 describe-instances --region eu-west-1 --instance-ids=$(curl -L ht
 
   if [[ "$ELASTIC_IP" != "$CURRENT_IP" ]]; then
     aws ec2 associate-address --region eu-west-1 --allocation-id=$ELASTIC_IP_ID --instance-id=$(curl -L http://169.254.169.254/latest/meta-data/instance-id)
-    #taginstance $LOCAL_HOSTNAME elastic-ip-instance true
+    taginstance $LOCAL_HOSTNAME elastic-ip-instance true
   else
     echo "Instance is already tagged" # this IF statement avoids a LOT of AWS eip remap costs
   fi
